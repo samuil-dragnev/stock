@@ -1,0 +1,15 @@
+﻿@model Project.Models.ApplicationUser
+@{
+    ViewBag.Title = "Transactions";
+}
+
+<h2>Transactions</h2>
+<p>@ViewBag.Status</p>
+ [ @Html.ActionLink("Manage", "Index") ]
+<hr />
+<div>
+    <p><b>Current Balance:</b> @Model.Balance USD</p>
+</div>
+<hr />
+@Html.ActionLink("Deposit", "BankDeposit") | @Html.ActionLink("Withdraw", "BankWithdraw")
+<hr />

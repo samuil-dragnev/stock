@@ -1,0 +1,428 @@
+﻿@model Project.Models.UserStockAndBalance
+@{
+    ViewBag.Title = "Index";
+}
+<script language="javascript" type="text/javascript">
+    var myModelQuotes = @Html.Raw(Json.Encode(Model.MyQuotes));
+</script>
+<div class="row">
+    <div class="col-lg-12">
+        <ul class="nav nav-tabs nav-justified">
+            <li class="active"><a data-toggle="tab" href="#MyStocks">My Stocks</a></li>
+            <li><a data-toggle="tab" href="#SearchStock">Search for Stocks</a></li>
+            <li><a data-toggle="tab" href="#Friends">Friends</a></li>
+        </ul>
+        <div class="tab-content">
+            <div id="MyStocks" class="tab-pane fade in active">
+                <div class="row">
+                    <div class="col-lg-3 pre-scrollable" style="max-height: 450px">
+
+                        @if (Model.MyQuotes != null)
+                        {
+                            if (Model.MyQuotes.Count > 0)
+                            {
+                                <div class="list-group myQuotesList">
+                                    @foreach (var myQuote in Model.MyQuotes)
+                                    {
+                                        <div class="list-group-item myQuote" style="margin-top: 5px">
+                                            <h5 class="list-group-item-heading" style="color: #114040">
+                                                <span class="myQuoteId" style="display: none">@myQuote.QuoteId</span>
+                                                <b>Name:</b> <span class="myQuoteName">@myQuote.Name</span>
+                                                <br />
+                                                <b>Symbol:</b> <span class="myQuoteSymbol">@myQuote.Symbol</span>
+                                            </h5>
+                                            <p class="list-group-item-text">
+                                                <b>Aquired shares:</b> <span class="myQuoteTradeDate">@myQuote.StockShares</span>
+                                                <br />
+                                                <b>Aquired type:</b> <span class="myQuoteTradeDate"> @Html.Raw((myQuote.IsBuyOrSell) ? "Asking" : "Bidding")</span>
+                                                <br />
+                                                <b>Aquired for:</b> <span class="myQuoteTradeDate">@myQuote.StockPrice</span>
+                                                <br />
+                                                <b>Aquired on:</b> <span class="myQuoteTradeDate">@myQuote.TradeDate.ToString("MM/dd/yy H:mm:ss")</span>
+                                                <button type="button" class="btn btn-primary btnMyQuoteView">View</button>
+                                            </p>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <h5>Currently you do not have any stocks!</h5>
+                            }
+                        }
+                    </div>
+                    <div class="col-lg-9">
+                        <div class="panel panel-default" style="height: 450px; margin-top: 5px">
+                            <div class="panel-heading">
+                                <div class="row panel-title">
+                                    <div class="col-lg-4">
+                                        <b>Current balance:</b> <span id="currBalance">@Model.Balance</span> USD
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <b>Invested:</b> <span id="currInvested">@Model.Invested</span> USD
+                                    </div>
+                                    <div class="col-lg-4">
+                                        @{
+                                            var profitPercent = (Model.Profit != 0 || Model.Invested != 0) ? decimal.Round(((Model.Profit / Model.Invested) * 100), 2, MidpointRounding.AwayFromZero) : 0;
+                                        }
+                                    </div>
+                                    <b>Profits:</b> <span id="currProfit">@Model.Profit</span> USD / <span id="profitPercent">@profitPercent %</span> (<span id="arrowProfit" class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>)
+                                </div>
+                            </div>
+                            <div class="panel-body pre-scrollable" style="max-height: 390px;">
+                                <div class="panel panel-default" id="myQuoteInfo" style="display: none;">
+                                    <div class="panel-heading">
+                                        <div class="row panel-title">
+                                            <div class="col-lg-4 col-lg-offset-2">
+                                                Symbol: <span id="myQuoteSymbol"></span>
+                                            </div>
+                                            <div class="col-lg-4 col-lg-offset-2">
+                                                Volume: <span id="myQuoteVolume"></span>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-5">
+                                                <p>
+                                                    Real-time Ask: <span id="myQuoteAsk"></span> <span class="myQuoteCurrency"></span> (<span id="myQuoteAskArrow" class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>)
+                                                </p>
+                                            </div>
+                                            <div class="col-lg-5">
+                                                <p>
+                                                    Real-time Bid: <span id="myQuoteBid"></span> <span class="myQuoteCurrency"></span> (<span id="myQuoteBidArrow" class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>)
+                                                </p>
+                                            </div>
+                                            <div class="col-lg-2">
+                                                <button type="button" id="btnCollect" class="btn btn-sm btn-primary">Collect!</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <div class="col-lg-9" id="myQuoteHistory">
+                                                <form id="historyMyQuote" class="row">
+                                                    <div class="col-lg-4">
+                                                        Start: <input type="text" name="startDate" id="startDate" />
+                                                    </div>
+                                                    <div class="col-lg-4">
+                                                        End: <input type="text" name="endDate" id="endDate" />
+                                                    </div>
+                                                    <div class="col-lg-4">
+                                                        <button class="btn btn-default btn-sm" id="btnUpdateHistory" type="button" style="margin-top: 16px">Update</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <div class="col-lg-3">
+                                                <div class="row">
+                                                    <div class="panel panel-default col-lg-12 rssFeedMyStock pre-scrollable" style="max-height: 350px">
+                                                        <div class="thumbnail yahooRssMyStock" style="margin-top: 5px">
+                                                            <img class="yahooImageMyStock" src="" alt="">
+                                                            <div class="caption">
+                                                                <p><a href="" target="_blank" class="yahooLinkMyStock"></a></p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="panel-footer">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered">
+                                                        <tbody id="myQuoteTableOne"></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered">
+                                                        <tbody id="myQuoteTableTwo">
+                                                            <tr></tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="SearchStock" class="tab-pane fade">
+                <div class="row">
+                    <div class="col-lg-3">
+                        <div class="row">
+                            <h3>Search for Stocks</h3>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="companyName" placeholder="Search for...">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" id="btnSearch" type="button">Search!</button>
+                                    <button class="btn btn-default" id="btnClear" type="button" style="display: none">Clear</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row" id="results" style="display: none">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="col-lg-12 pre-scrollable">
+                                        <div class="list-group mySearchQuoteResults"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-9" id="searchSelectedQuotePanel" style="display: none">
+                        <h3>Information/Details About: <span id="searchSelectQuoteName"></span></h3>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    Symbol: <span id="searchSelectQuoteSymbol"></span>
+                                    -
+                                    Volume: <span id="searchSelectQuoteVolume"></span>
+                                </h3>
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <p>
+                                            Real-time Ask: <span id="searchSelectQuoteRealTimeAsk"></span> <span class="searchSelectQuoteCurrency"></span> (<span id="askArrow" class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>)
+                                            <button type="button" id="btnAsk" class="btn btn-default" data-toggle="modal" data-target="#modalStock" data-whatever="Ask">Ask</button>
+                                        </p>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <p>
+                                            Real-time Bid: <span id="searchSelectQuoteRealTimeBid"></span> <span class="searchSelectQuoteCurrency"></span> (<span id="bidArrow" class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>)
+                                            <button type="button" id="btnBid" class="btn btn-default" data-toggle="modal" data-target="#modalStock" data-whatever="Bid">Bid</button>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-body" style="height: 400px">
+                                <div class="row">
+                                    <div class="col-lg-9" id="myQuoteHistorySearch">
+                                        <form id="historySearch" class="row">
+                                            <div class="col-lg-4">
+                                                Start: <input type="text" name="startDateSearch" id="startDateSearch" />
+                                            </div>
+                                            <div class="col-lg-4">
+                                                End: <input type="text" name="endDateSearch" id="endDateSearch" />
+                                            </div>
+                                            <div class="col-lg-4">
+                                                <button class="btn btn-default btn-sm" id="btnUpdateHistorySearch" type="button" style="margin-top: 16px">Update</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <div class="row">
+                                            <div class="panel panel-default col-lg-12 rssFeed pre-scrollable" style="max-height: 350px">
+                                                <div class="thumbnail yahooRss" style="margin-top: 5px">
+                                                    <img class="yahooImage" src="" alt="">
+                                                    <div class="caption">
+                                                        <p><a href="" target="_blank" class="yahooLink"></a></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-footer quoteInfoFooter">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered">
+                                                <tbody id="quoteInfoMoreTableOne"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered">
+                                                <tbody id="quoteInfoMoreTableTwo"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="Friends" class="tab-pane fade">
+                <ul class="nav nav-tabs nav-justified" style="margin-top: 5px">
+                    <li class="active"><a data-toggle="tab" href="#MyFriends">My Friends</a></li>
+                    <li><a data-toggle="tab" href="#SearchFriends">Search for Friends</a></li>
+                </ul>
+                <div class="tab-content">
+
+                    <div id="MyFriends" class="tab-pane fade in active">
+                        <div class="row">
+                            <div class="col-lg-3 pre-scrollable" style="max-height: 450px">
+                                @if (Model.MyFriends != null)
+                                {
+                                    if (Model.MyFriends.Count > 0)
+                                    {
+                                        <div class="list-group myFriendsList">
+                                            @foreach (var myFriend in Model.MyFriends)
+                                            {
+                                                <div class="list-group-item myFriend" style="margin-top: 5px">
+                                                    <h5 class="list-group-item-heading" style="color: #114040">
+                                                        <b>Username:</b> <span class="myFriendUsername">@myFriend.UserName</span>
+                                                    </h5>
+                                                    <p class="list-group-item-text">
+                                                        <b>Name:</b> <span class="myFriendName">@myFriend.FirstName @myFriend.LastName</span>
+                                                        <br />
+                                                        <b>E-mail:</b> <span class="myFriendEmail"> @myFriend.Email</span>
+                                                        <button type="button" class="btn btn-primary btnMyFriendChat">Chat</button>
+                                                    </p>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <h5>Currently you do not have any friends!</h5>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div id="SearchFriends" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <div class="row">
+                                    <h3>Search for Friends</h3>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="friendUserName" placeholder="Username...">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" id="btnSearchFriend" type="button">Search!</button>
+                                            <button class="btn btn-default" id="btnClear" type="button" style="display: none">Clear</button>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row" id="searchFriendResult" style="display: none;">
+                                    <div class="well well-lg" style="margin-top: 5px">
+                                        <span id="searchFriendResultId" style="display: none"></span>
+                                        <div class="row">
+                                            <div class="col-lg-6 col-lg-offset-1">
+                                                <h3>Name: <span id="searchFriendResultName"></span></h3>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-6 col-lg-offset-1">
+                                                <h3>E-mail: <span id="searchFriendResultEmail"></span></h3>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-6 col-lg-offset-3">
+                                                <button type="button" id="btnAddFriend" class="btn btn-primary">Add friend!</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" id="searchFriendError" style="display: none">
+                                    <h3>No user with this username was found!</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCollect">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><b>Collect!</b> <span id="collectName"></span> <b>|</b> <span id="collectSymbol"></span> <b>Type:</b> <span id="collectType"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <b>Shares:</b> <span id="collectShares"></span>
+                    </div>
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <b>Invested:</b> <span id="collectInvested"></span> <span class="collectCurrency"></span>
+                    </div>
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <b>Current worth:</b> <span id="collectCurrWorth"></span> <span class="collectCurrency"></span>
+                    </div>
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <b>Profit:</b> <span id="collectProfit"></span> <span class="collectCurrency"></span> (<span id="collectArrow" class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>)
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form id="collectForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="stockId" value="" />
+                </form>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnModalCollect">Collect</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalStock" tabindex="-1" role="dialog" aria-labelledby="modalStockLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalStockLabel"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <p>
+                            Current Balance:
+                            <span id="currentModalBalance"></span>
+                            (<span id="balanceArrow" class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>)
+                        </p>
+                    </div>
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <p>
+                            Current rate:
+                            <span id="currentRate"></span>
+                            (<span id="rateArrow" class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>)
+                        </p>
+                    </div>
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <form id="formAquireShares">
+                            @Html.AntiForgeryToken()
+                            <div class="form-group">
+                                <label for="recipient-name" class="control-label">Shares you would like to aquire:</label>
+                                <input type="text" class="form-control" name="aquireSharesNumber" id="aquireSharesNumber" />
+                                <input type="hidden" name="aquireSharesName" id="aquireSharesName" value="" />
+                                <input type="hidden" name="aquireSharesSymbol" id="aquireSharesSymbol" value="" />
+                                <input type="hidden" name="aquireSharesPrice" id="aquireSharesPrice" value="" />
+                                <input type="hidden" name="aquireSharesIsBuyOrSell" id="aquireSharesIsBuyOrSell" value="" />
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-6 col-lg-offset-3">
+                        <p>
+                            <span id="amountToPayForShares">0.00</span>
+                            <span class="searchSelectQuoteCurrency"></span>
+                        </p>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnOperation"></button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/dashboard")
+}

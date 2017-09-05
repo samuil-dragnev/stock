@@ -1,0 +1,32 @@
+﻿path {
+    stroke: #3e4646;
+    stroke-width: 2;
+    fill: none;
+}
+
+text.shadow {
+    stroke: white;
+    stroke-width: 2.5px;
+    opacity: 0.9;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.grid .tick {
+    stroke: lightgrey;
+    opacity: 0.5;
+}
+.grid path {
+      stroke-width: 0;
+}
+
+.dot {
+    stroke: steelblue;
+    fill: #0094ff;
+}

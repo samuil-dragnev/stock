@@ -1,0 +1,25 @@
+﻿@model IEnumerable<Microsoft.AspNet.Identity.EntityFramework.IdentityRole>
+@{
+    ViewBag.Title = "List of Roles";
+}
+
+<h2>Roles Listing </h2>
+
+@Html.ActionLink("Manage", "Index") | @Html.ActionLink("Add New Role", "AddRole") | @Html.ActionLink("Manage User Role", "ManageUserRoles")
+<hr />
+<div>
+    @foreach (var role in Model)
+    {
+        <p>
+            <strong>@role.Name</strong>
+            @if (!role.Name.Equals("Admin") && !role.Name.Equals("User") && !role.Name.Equals("Banned"))
+            {
+                <strong> | </strong><span onclick="return confirm('Are you sure to delete?')"><a href="/Manage/DeleteRole?RoleName=@role.Name" class="delLink" style="color:red;">Delete</a></span>
+            }
+            else
+            {
+                <strong> | final</strong>
+            }
+        </p>
+    }
+</div>

@@ -1,0 +1,2 @@
+C:\Users\Samuil\Desktop\ASPWS\WebProject\WebProject\bin\Debug\ServiceConfiguration.cscfg
+C:\Users\Samuil\Desktop\ASPWS\WebProject\WebProject\bin\Debug\ServiceDefinition.csdef
